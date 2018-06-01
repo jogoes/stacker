@@ -1,0 +1,56 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Hello Lambda'
+
+Parameters:
+  BucketName:
+    Type: String
+  ArtifactPath:
+    Type: String
+  LambdaFunctionName:
+    Type: String
+
+Resources:
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+      Policies:
+      - PolicyName: root
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - logs:*
+            Resource: arn:aws:logs:*:*:*
+      - PolicyName: FullAccessS3BucketsPolicy
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - s3:*
+            Resource: "*"
+
+  HelloLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Handler: index.handler
+      FunctionName:
+        Ref: LambdaFunctionName
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        S3Bucket:
+          Ref: BucketName
+        S3Key:
+          Ref: ArtifactPath
+      Runtime: nodejs8.10
