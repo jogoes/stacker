@@ -1,17 +1,18 @@
 #!/usr/bin/env bash
 
 STACK_NAME="hellolambda"
+
 # Update these to match your needs
 REGION=
 AWS_S3_DEPLOYMENT_BUCKET_NAME=
+
+STACK_FILENAME="stack.yaml"
 
 AWS_S3_DEPLOYMENT="s3://${AWS_S3_DEPLOYMENT_BUCKET_NAME}"
 AWS_S3_DEPLOYMENT_STACKS_FOLDER="stacks"
 AWS_S3_DEPLOYMENT_STACKS="${AWS_S3_DEPLOYMENT}/${AWS_S3_DEPLOYMENT_STACKS_FOLDER}/${STACK_FILENAME}"
 
 AWS_S3_DEPLOYMENT_STACK_TEMPLATE_URL="https://s3.${REGION}.amazonaws.com/${AWS_S3_DEPLOYMENT_BUCKET_NAME}/${AWS_S3_DEPLOYMENT_STACKS_FOLDER}/${STACK_FILENAME}"
-
-STACK_FILENAME="stack.yaml"
 
 PROJECT_NAME=hellolambda
 ARTIFACTS_FILENAME="${PROJECT_NAME}.zip"
@@ -38,12 +39,19 @@ function upload {
 
 function create_stack {
     upload
-    aws cloudformation create-stack --capabilities CAPABILITY_IAM \
+
+    echo "Creating stack..."
+    aws cloudformation create-stack \
+        --capabilities CAPABILITY_IAM \
         --stack-name $STACK_NAME \
+        --region $REGION \
         --template-url=$AWS_S3_DEPLOYMENT_STACK_TEMPLATE_URL \
         --parameters ParameterKey=BucketName,ParameterValue=$AWS_S3_DEPLOYMENT_BUCKET_NAME \
              ParameterKey=ArtifactPath,ParameterValue=${AWS_S3_DEPLOYMENT_ARTIFACTS_FOLDER}/$ARTIFACTS_FILENAME \
              ParameterKey=LambdaFunctionName,ParameterValue=HelloLambdaFunction
+    echo "Waiting for completion of stack creation..."
+    aws cloudformation wait stack-create-complete --stack-name $STACK_NAME
+    echo "Stack created."
 }
 
 function delete_stack {
@@ -57,12 +65,14 @@ function describe_stack {
 
 function update_stack {
     upload
-    aws cloudformation update-stack --capabilities CAPABILITY_IAM \
-    --stack-name $STACK_NAME \
-    --template-url=$AWS_S3_DEPLOYMENT_STACK_TEMPLATE_URL \
-    --parameters ParameterKey=BucketName,ParameterValue=$AWS_S3_DEPLOYMENT_BUCKET_NAME \
-         ParameterKey=ArtifactPath,ParameterValue=${AWS_S3_DEPLOYMENT_ARTIFACTS_FOLDER}/$ARTIFACTS_FILENAME \
-         ParameterKey=LambdaFunctionName,ParameterValue=HelloLambdaFunction
+    aws cloudformation update-stack \
+        --capabilities CAPABILITY_IAM \
+        --stack-name $STACK_NAME \
+        --region $REGION \
+        --template-url=$AWS_S3_DEPLOYMENT_STACK_TEMPLATE_URL \
+        --parameters ParameterKey=BucketName,ParameterValue=$AWS_S3_DEPLOYMENT_BUCKET_NAME \
+             ParameterKey=ArtifactPath,ParameterValue=${AWS_S3_DEPLOYMENT_ARTIFACTS_FOLDER}/$ARTIFACTS_FILENAME \
+             ParameterKey=LambdaFunctionName,ParameterValue=HelloLambdaFunction
 }
 
 function deploy {

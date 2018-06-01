@@ -5,13 +5,13 @@ STACK_NAME=
 REGION=
 AWS_S3_DEPLOYMENT_BUCKET_NAME=
 
+STACK_FILENAME="stack.yaml"
+
 AWS_S3_DEPLOYMENT="s3://${AWS_S3_DEPLOYMENT_BUCKET_NAME}"
 AWS_S3_DEPLOYMENT_STACKS_FOLDER="stacks"
 AWS_S3_DEPLOYMENT_STACKS="${AWS_S3_DEPLOYMENT}/${AWS_S3_DEPLOYMENT_STACKS_FOLDER}/${STACK_FILENAME}"
 
 AWS_S3_DEPLOYMENT_STACK_TEMPLATE_URL="https://s3.${REGION}.amazonaws.com/${AWS_S3_DEPLOYMENT_BUCKET_NAME}/${AWS_S3_DEPLOYMENT_STACKS_FOLDER}/${STACK_FILENAME}"
-
-STACK_FILENAME="stack.yaml"
 
 function upload_stack {
     # Copy to the S3 stacks location
@@ -24,9 +24,17 @@ function upload {
 
 function create_stack {
     upload
-    aws cloudformation create-stack --capabilities CAPABILITY_IAM \
+
+    echo "Creating stack..."
+    aws cloudformation create-stack \
+        --capabilities CAPABILITY_IAM \
         --stack-name $STACK_NAME \
+        --region $REGION \
         --template-url=$AWS_S3_DEPLOYMENT_STACK_TEMPLATE_URL
+
+    echo "Waiting for completion of stack creation..."
+    aws cloudformation wait stack-create-complete --stack-name $STACK_NAME
+    echo "Stack created."
 }
 
 function delete_stack {
@@ -40,7 +48,11 @@ function describe_stack {
 
 function update_stack {
     upload
-    aws cloudformation update-stack --capabilities CAPABILITY_IAM --stack-name $STACK_NAME --template-url=$AWS_S3_DEPLOYMENT_STACK_TEMPLATE_URL
+    aws cloudformation update-stack \
+        --capabilities CAPABILITY_IAM \
+        --stack-name $STACK_NAME \
+        --region $REGION \
+        --template-url=$AWS_S3_DEPLOYMENT_STACK_TEMPLATE_URL
 }
 
 function deploy {
