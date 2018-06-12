@@ -1,0 +1,54 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Stacker Example Template - Creating a new user'
+
+Parameters:
+  BucketName:
+    Type: String
+  UserName:
+    Type: String
+  Password:
+    Type: String
+
+
+Resources:
+  UserBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName:
+        Ref: BucketName
+
+  User:
+    Type: AWS::IAM::User
+    Properties:
+      Path: "/"
+      UserName:
+        Ref: UserName
+      LoginProfile:
+        Password:
+          Ref: Password
+      Policies:
+      - PolicyName: s3userbucketaccess
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - s3:ListAllMyBuckets
+            Resource: arn:aws:s3:::*
+          - Effect: Allow
+            Action:
+            - s3:ListBucket
+            - s3:GetBucketLocation
+            Resource:
+            - !GetAtt UserBucket.Arn
+          - Effect: Allow
+            Action:
+            - s3:PutObject
+            - s3:PubObjectAcl
+            - s3:GetObject
+            - s3:GetObjectAcl
+            - s3:DeleteObject
+            Resource: !Join
+            - ''
+            - - !GetAtt UserBucket.Arn
+              - '/*'
