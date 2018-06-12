@@ -82,20 +82,23 @@ fi
 
 if [ "$#" -ne 1 ]; then
     name = $(basename -- "$0")
-    echo "Usage: $name [create|delete|deploy|describe|update|upload"
+    echo "Usage: $name [create|delete|deploy|describe|update|upload]"
+    exit 1
 fi
 
-if [ $1 == "create" ]; then
+COMMAND=$1
+
+if [ $COMMAND == "create" ]; then
     create_stack
-elif [ $1 == "delete" ]; then
+elif [ $COMMAND == "delete" ]; then
     delete_stack
-elif [ $1 == "deploy" ]; then
+elif [ $COMMAND == "deploy" ]; then
     deploy
-elif [ $1 == "describe" ]; then
+elif [ $COMMAND == "describe" ]; then
     describe_stack
-elif [ $1 = "update" ]; then
+elif [ $COMMAND == "update" ]; then
     upload
     update_stack
-elif [ $1 == "upload" ]; then
+elif [ $COMMAND == "upload" ]; then
     upload
 fi
